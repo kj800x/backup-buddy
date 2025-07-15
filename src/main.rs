@@ -1,18 +1,23 @@
 use actix_web::HttpResponse;
 use actix_web::{web, App, HttpServer};
+use backup_worker::BackupWorker;
+use db::dao::PolicyDao;
+use db::init_db;
+use missing_policy_worker::MissingPolicyWorker;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
 use std::sync::Arc;
+use tokio::sync::RwLock;
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
-mod db;
-mod worker;
-use db::dao::PolicyDao;
-use db::init_db;
-use worker::Worker;
+use crate::missing_policy_worker::MissingPolicyWorkerData;
+
+mod backup_worker;
 mod config;
+mod db;
+mod missing_policy_worker;
 mod pages;
 
 macro_rules! serve_static_file {
@@ -39,6 +44,7 @@ macro_rules! serve_static_file {
 pub struct AppState {
     pub policy_dao: Arc<PolicyDao>,
     pub config: Arc<config::Config>,
+    pub missing_policy_worker_data: Arc<RwLock<MissingPolicyWorkerData>>,
 }
 
 #[actix_web::main]
@@ -67,23 +73,39 @@ async fn main() -> std::io::Result<()> {
     info!("Database initialized successfully");
 
     let policy_dao = Arc::new(PolicyDao::new(conn));
+    let missing_policy_worker_data = Arc::new(RwLock::new(MissingPolicyWorkerData::new()));
     let app_state = web::Data::new(AppState {
         policy_dao: policy_dao.clone(),
         config: Arc::new(config.clone()),
+        missing_policy_worker_data: missing_policy_worker_data.clone(),
     });
 
-    // Spawn the controller thread
+    // Spawn the backup worker thread
     let policy_dao_clone = policy_dao.clone();
     let config_clone = Arc::new(config.clone());
-    let handle = tokio::spawn(async move {
-        let worker = Worker::new(policy_dao_clone, config_clone);
+    let backup_worker_handle = tokio::spawn(async move {
+        let worker = BackupWorker::new(policy_dao_clone, config_clone);
         worker.run().await;
-        panic!("Worker thread returned unexpectedly");
+        panic!("Backup worker thread returned unexpectedly");
+    });
+
+    // Spawn the missing policy worker thread
+    let policy_dao_clone = policy_dao.clone();
+    let config_clone = Arc::new(config.clone());
+    let missing_policy_worker_data_clone = missing_policy_worker_data.clone();
+    let missing_policy_worker_handle = tokio::spawn(async move {
+        let worker = MissingPolicyWorker::new(
+            policy_dao_clone,
+            config_clone,
+            missing_policy_worker_data_clone,
+        );
+        worker.run().await;
+        panic!("Missing policy worker thread returned unexpectedly");
     });
 
     info!("Starting HTTP server on 0.0.0.0:8080");
 
-    // Run both the HTTP server and controller
+    // Run both the HTTP server and workers
     let server = HttpServer::new(move || {
         App::new()
             .wrap(tracing_actix_web::TracingLogger::default())
@@ -138,6 +160,7 @@ async fn main() -> std::io::Result<()> {
 
     tokio::select! {
         _ = server => panic!("HTTP server panicked or returned unexpectedly"),
-        _ = handle => panic!("Worker thread panicked or returned unexpectedly")
+        _ = backup_worker_handle => panic!("Backup worker thread panicked or returned unexpectedly"),
+        _ = missing_policy_worker_handle => panic!("Missing policy worker thread panicked or returned unexpectedly"),
     }
 }
