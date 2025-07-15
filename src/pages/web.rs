@@ -153,3 +153,62 @@ pub fn policy_details(policy: BackupPolicy) -> Markup {
         }
     }
 }
+
+pub fn edit_policy_form(policy: &BackupPolicy) -> Markup {
+    html! {
+        div class="form-container" {
+            h1 { "Edit Backup Policy" }
+
+            form
+                hx-post=(format!("/backup-buddy/policy/{}/edit", policy.id))
+                hx-target="body"
+                hx-swap="outerHTML"
+                class="policy-form"
+            {
+                div class="form-group" {
+                    label for="path" { "Path:" }
+                    input
+                        type="text"
+                        id="path"
+                        name="path"
+                        required
+                        value=(policy.path)
+                    {}
+                }
+
+                div class="form-group" {
+                    label for="max_staleness" { "Max Staleness (milliseconds):" }
+                    input
+                        type="number"
+                        id="max_staleness"
+                        name="max_staleness"
+                        required
+                        min="0"
+                        value=(policy.max_staleness)
+                    {}
+                }
+
+                div class="form-group" {
+                    label for="kind" { "Policy Kind:" }
+                    select id="kind" name="kind" required {
+                        option value="backup" selected[policy.kind.to_string() == "backup"] { "Backup" }
+                        option value="exclude" selected[policy.kind.to_string() == "exclude"] { "Exclude" }
+                        option value="null" selected[policy.kind.to_string() == "null"] { "Null" }
+                    }
+                }
+
+                div class="form-group" {
+                    label class="checkbox-label" {
+                        input type="checkbox" id="recursive" name="recursive" checked[policy.recursive] {}
+                        span { "Recursive" }
+                    }
+                }
+
+                div class="form-actions" {
+                    button type="submit" class="btn btn-primary" { "Save Changes" }
+                    a href=(format!("/backup-buddy/policy/{}", policy.id)) class="btn btn-secondary" { "Cancel" }
+                }
+            }
+        }
+    }
+}

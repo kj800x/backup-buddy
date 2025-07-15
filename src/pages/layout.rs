@@ -6,16 +6,16 @@ fn human_readable_duration(duration: TimeDelta) -> String {
     let mut components: Vec<String> = Vec::new();
 
     if remainder >= Duration::days(1) {
-        components.push(format!("{}d", duration.num_days()));
-        remainder = remainder - Duration::days(duration.num_days());
+        components.push(format!("{}d", remainder.num_days()));
+        remainder = remainder - Duration::days(remainder.num_days());
     }
     if remainder >= Duration::hours(1) {
-        components.push(format!("{}h", duration.num_hours()));
-        remainder = remainder - Duration::hours(duration.num_hours());
+        components.push(format!("{}h", remainder.num_hours()));
+        remainder = remainder - Duration::hours(remainder.num_hours());
     }
     if remainder >= Duration::minutes(1) {
-        components.push(format!("{}m", duration.num_minutes()));
-        remainder = remainder - Duration::minutes(duration.num_minutes());
+        components.push(format!("{}m", remainder.num_minutes()));
+        remainder = remainder - Duration::minutes(remainder.num_minutes());
     }
     if remainder >= Duration::seconds(1) {
         components.push(format!("{}s", remainder.num_seconds()));

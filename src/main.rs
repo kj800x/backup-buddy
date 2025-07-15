@@ -118,6 +118,18 @@ async fn main() -> std::io::Result<()> {
                     .route(
                         "/policy/{id}",
                         web::get().to(pages::handlers::policy_details),
+                    )
+                    .route(
+                        "/policy/{id}/edit",
+                        web::get().to(pages::handlers::edit_policy_form),
+                    )
+                    .route(
+                        "/policy/{id}/edit",
+                        web::post().to(pages::handlers::edit_policy),
+                    )
+                    .route(
+                        "/policy/{id}",
+                        web::delete().to(pages::handlers::delete_policy),
                     ),
             )
     })
