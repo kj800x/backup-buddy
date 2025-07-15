@@ -337,6 +337,15 @@ h3 {
   background-color: #4b5563;
 }
 
+.btn-danger {
+  background-color: #dc2626;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #b91c1c;
+}
+
 .actions {
   margin-bottom: 2rem;
 }

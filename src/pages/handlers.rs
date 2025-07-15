@@ -115,3 +115,30 @@ pub async fn create_policy(
         }
     }
 }
+
+pub async fn policy_details(state: web::Data<AppState>, path: web::Path<String>) -> impl Responder {
+    let policy_id = match Uuid::parse_str(&path.into_inner()) {
+        Ok(id) => id,
+        Err(_) => {
+            return HttpResponse::BadRequest().body("Invalid policy ID");
+        }
+    };
+
+    let policy_dao = state.policy_dao.clone();
+    match web::block(move || policy_dao.get_policy(&policy_id)).await {
+        Ok(Ok(Some(policy))) => {
+            let content = super::web::policy_details(policy);
+            HttpResponse::Ok()
+                .body(layout::base_layout("Policy Details - Backup Buddy", content).into_string())
+        }
+        Ok(Ok(None)) => HttpResponse::NotFound().body("Policy not found"),
+        Ok(Err(e)) => {
+            error!(error = %e, "Failed to get policy");
+            HttpResponse::InternalServerError().body("Failed to get policy")
+        }
+        Err(e) => {
+            error!(error = ?e, "Blocking error while getting policy");
+            HttpResponse::InternalServerError().body("Failed to get policy")
+        }
+    }
+}

@@ -1,5 +1,5 @@
 use crate::{db::models::BackupPolicy, pages::layout};
-use chrono::{Duration, TimeDelta};
+use chrono::Duration;
 use maud::{html, Markup};
 
 pub fn index(policies: Vec<BackupPolicy>) -> Markup {
@@ -102,6 +102,52 @@ pub fn create_policy_form() -> Markup {
                 div class="form-actions" {
                     button type="submit" class="btn btn-primary" { "Create Policy" }
                     a href="/backup-buddy" class="btn btn-secondary" { "Cancel" }
+                }
+            }
+        }
+    }
+}
+
+pub fn policy_details(policy: BackupPolicy) -> Markup {
+    html! {
+        div class="container" {
+            div class="back-link" {
+                a href="/backup-buddy" class="link" { "← Back to Policies" }
+            }
+
+            div class="card" {
+                h1 { "Backup Policy Details" }
+
+                div class="info-grid" {
+                    dt { "ID:" }
+                    dd { (policy.id.to_string()) }
+
+                    dt { "Path:" }
+                    dd { (policy.path) }
+
+                    dt { "Max Staleness:" }
+                    dd { (layout::duration_element(Duration::milliseconds(policy.max_staleness as i64))) }
+
+                    dt { "Policy Kind:" }
+                    dd { (policy.kind.to_string()) }
+
+                    dt { "Recursive:" }
+                    dd { (if policy.recursive { "Yes" } else { "No" }) }
+                }
+
+                div class="action-buttons" {
+                    a href=(format!("/backup-buddy/policy/{}/edit", policy.id)) class="btn btn-primary" {
+                        "Edit Policy"
+                    }
+                    button
+                        class="btn btn-danger"
+                        hx-delete=(format!("/backup-buddy/policy/{}", policy.id))
+                        hx-confirm="Are you sure you want to delete this policy?"
+                        hx-target="body"
+                        hx-swap="outerHTML"
+                    {
+                        "Delete Policy"
+                    }
                 }
             }
         }

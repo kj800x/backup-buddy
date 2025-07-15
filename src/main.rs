@@ -114,6 +114,10 @@ async fn main() -> std::io::Result<()> {
                     .route(
                         "/policy/create",
                         web::post().to(pages::handlers::create_policy),
+                    )
+                    .route(
+                        "/policy/{id}",
+                        web::get().to(pages::handlers::policy_details),
                     ),
             )
     })
