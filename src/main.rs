@@ -106,6 +106,14 @@ async fn main() -> std::io::Result<()> {
                     .route(
                         "/index-fragment",
                         web::get().to(pages::handlers::web_index_fragment),
+                    )
+                    .route(
+                        "/policy/new",
+                        web::get().to(pages::handlers::create_policy_form),
+                    )
+                    .route(
+                        "/policy/create",
+                        web::post().to(pages::handlers::create_policy),
                     ),
             )
     })

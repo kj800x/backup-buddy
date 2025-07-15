@@ -1,5 +1,38 @@
-use chrono::{DateTime, Duration, Local, Utc};
+use chrono::{DateTime, Duration, Local, TimeDelta, Utc};
 use maud::{html, Markup};
+
+fn human_readable_duration(duration: TimeDelta) -> String {
+    let mut remainder = duration.clone();
+    let mut components: Vec<String> = Vec::new();
+
+    if remainder >= Duration::days(1) {
+        components.push(format!("{}d", duration.num_days()));
+        remainder = remainder - Duration::days(duration.num_days());
+    }
+    if remainder >= Duration::hours(1) {
+        components.push(format!("{}h", duration.num_hours()));
+        remainder = remainder - Duration::hours(duration.num_hours());
+    }
+    if remainder >= Duration::minutes(1) {
+        components.push(format!("{}m", duration.num_minutes()));
+        remainder = remainder - Duration::minutes(duration.num_minutes());
+    }
+    if remainder >= Duration::seconds(1) {
+        components.push(format!("{}s", remainder.num_seconds()));
+        remainder = remainder - Duration::seconds(remainder.num_seconds());
+    }
+    if remainder >= Duration::milliseconds(1) {
+        components.push(format!("{}ms", remainder.num_milliseconds()));
+    }
+
+    components.join(" ")
+}
+
+pub fn duration_element(duration: TimeDelta) -> Markup {
+    html! {
+        time datetime=(duration.to_string()) title=(format!("{} ms", duration.num_milliseconds())) { (human_readable_duration(duration)) }
+    }
+}
 
 pub fn __timestamp_element(timestamp: Option<DateTime<Utc>>) -> Markup {
     match timestamp {
