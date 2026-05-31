@@ -82,9 +82,9 @@ impl MissingPolicyWorker {
         data: Arc<RwLock<MissingPolicyWorkerData>>,
     ) -> Self {
         Self {
-            policy_dao: policy_dao,
-            config: config,
-            data: data,
+            policy_dao,
+            config,
+            data,
         }
     }
 
