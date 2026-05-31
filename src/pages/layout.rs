@@ -2,7 +2,7 @@ use chrono::{DateTime, Duration, Local, TimeDelta, Utc};
 use maud::{html, Markup};
 
 fn human_readable_duration(duration: TimeDelta) -> String {
-    let mut remainder = duration.clone();
+    let mut remainder = duration;
     let mut components: Vec<String> = Vec::new();
 
     if remainder >= Duration::days(1) {

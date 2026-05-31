@@ -27,7 +27,7 @@ pub fn init_db(db_path: &Path) -> Result<r2d2::Pool<SqliteConnectionManager>> {
     for (version, sql) in migrations.iter().enumerate() {
         if current_version <= version {
             info!("Running migration {}", version);
-            conn.execute_batch(&sql)?;
+            conn.execute_batch(sql)?;
             conn.execute(&format!("PRAGMA user_version = {}", version + 1), [])?;
         }
     }
